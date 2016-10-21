@@ -4,32 +4,32 @@ import com.google.gson.*;
 
 public class Connection {
 
+  private boolean connected;
   private final String URL_LOCATION;
-  private final String TOKEN = "8755d63d6136806e0b80e0648ef168e4";
+  public static final String TOKEN = "8755d63d6136806e0b80e0648ef168e4";
   private final String GITHUB = "https://github.com/faustinoaguirre/registration";
   HttpURLConnection urlConnection;
 
   public Connection(String location) {
     URL_LOCATION = location;
+    connected = false;
   }
 
-  private HttpURLConnection establishConnection() {
+  void establishConnection() {
     try {
       URL url = new URL(URL_LOCATION);
       urlConnection = (HttpURLConnection)url.openConnection();
       urlConnection.setRequestMethod("POST");
       urlConnection.setDoOutput(true);
       urlConnection.setDoInput(true);
-      //urlConnection.setAllowUserInteraction(true);
       urlConnection.setRequestProperty("Content-Type", "application/json");
-      return urlConnection;
+      connected = true;
     } catch (Exception e) {
         System.out.println("Connection failed");
-        return null;
     }
   }
 
-  private void sendRequest(JsonObject json) {
+  void postRequest(JsonObject json) {
     try{
       OutputStreamWriter writer = new OutputStreamWriter(urlConnection.getOutputStream());
       String message = json.toString();
@@ -40,25 +40,44 @@ public class Connection {
       urlConnection.connect();
 
       int responseCode = urlConnection.getResponseCode();
-      System.out.printf("Response Code: %d", responseCode);
+      System.out.printf("Response Code: %d\n", responseCode);
       int i =0;
     } catch (Exception e) {
-      System.out.println("Request failed");
+      System.out.println("POST failed");
     }
+  }
+
+  String getRequest() {
+    try{
+      BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+      String inputLine;
+      StringBuffer response = new StringBuffer();
+      while((inputLine=in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+      return response.toString();
+    } catch (Exception e) {
+      System.out.println("GET failed");
+      return null;
+    }
+  }
+
+  boolean connected() {
+    return connected;
   }
 
   public static void main(String[] args) {
     Connection myConnection = new Connection("http://challenge.code2040.org/api/register");
-    if(myConnection != null) {
-      HttpURLConnection urlConnection = myConnection.establishConnection();
+    myConnection.establishConnection();
+    if(myConnection.connected()) {
       
       JsonObject json = new JsonObject();
       
       json.addProperty("token", myConnection.TOKEN);
       json.addProperty("github", myConnection.GITHUB);
 
-      
-      myConnection.sendRequest(json);
+      myConnection.postRequest(json);
     } 
   }
 }
