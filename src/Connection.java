@@ -41,15 +41,33 @@ public class Connection {
 
       int responseCode = urlConnection.getResponseCode();
       System.out.printf("Response Code: %d\n", responseCode);
-      int i =0;
+      if(responseCode == 400) {
+        System.out.println(getError());
+      }
     } catch (Exception e) {
       System.out.println("POST failed");
-    }
+    } 
   }
 
   String getRequest() {
     try{
       BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+      String inputLine;
+      StringBuffer response = new StringBuffer();
+      while((inputLine=in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+      return response.toString();
+    } catch (Exception e) {
+      System.out.println("GET failed");
+      return null;
+    }
+  }
+
+  String getError() {
+    try{
+      BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getErrorStream()));
       String inputLine;
       StringBuffer response = new StringBuffer();
       while((inputLine=in.readLine()) != null) {
